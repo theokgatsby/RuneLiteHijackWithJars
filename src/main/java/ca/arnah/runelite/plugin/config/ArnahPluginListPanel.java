@@ -24,17 +24,6 @@
  */
 package ca.arnah.runelite.plugin.config;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
 import ca.arnah.runelite.events.ArnahPluginsChanged;
 import ca.arnah.runelite.plugin.ArnahPluginManager;
 import lombok.Getter;
@@ -51,108 +40,114 @@ import net.runelite.client.plugins.config.ConfigPlugin;
 import net.runelite.client.ui.MultiplexingPluginPanel;
 import net.runelite.client.ui.PluginPanel;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.List;
+
 @Slf4j
-public class ArnahPluginListPanel{
-	
-	private final ConfigManager configManager;
-	private final PluginManager pluginManager;
-	
-	private final Provider<ArnahPluginHubPanel> pluginHubPanelProvider;
-	@Getter
-	private static Object objPluginListPanel;
-	@Getter
-	private PluginPanel pluginListPanel;// PluginListPanel
-	
-	@Getter
-	private final ArnahPluginManager externalPluginManager;
-	
-	private static MultiplexingPluginPanel muxer;
-	
-	@Inject
-	public ArnahPluginListPanel(ConfigManager configManager, PluginManager pluginManager, Provider<ArnahPluginHubPanel> pluginHubPanelProvider, ArnahPluginManager externalPluginManager, EventBus eventBus){
-		this.configManager = configManager;
-		this.pluginManager = pluginManager;
-		this.pluginHubPanelProvider = pluginHubPanelProvider;
-		this.externalPluginManager = externalPluginManager;
-		eventBus.register(this);
-	}
-	
-	public void init(){
-		pluginManager.getPlugins().stream().filter(ConfigPlugin.class::isInstance).findAny().ifPresent(plugin->{
-			try{
-				Field field = ConfigPlugin.class.getDeclaredField("pluginListPanelProvider");
-				field.setAccessible(true);
-				Provider<PluginPanel> pluginPanelProvider = (Provider<PluginPanel>) field.get(plugin);
-				pluginListPanel = (PluginPanel) (objPluginListPanel = pluginPanelProvider.get());
-				SwingUtilities.invokeLater(()->{
-					JPanel southPanel = new FixedWidthPanel();
-					southPanel.setLayout(new BorderLayout());
-					for(Component maybeAButton : pluginListPanel.getComponents()){
-						if(maybeAButton instanceof JButton){
-							JButton button = (JButton) maybeAButton;
-							if(button.getText() == null) continue;
-							if(!button.getText().equals("Plugin Hub")) continue;
-							pluginListPanel.remove(button);
-							southPanel.add(button, "North");
-						}
-					}
-					JButton externalPluginButton = new JButton("RuneLiteHijack Plugin Hub");
-					externalPluginButton.setBorder(new EmptyBorder(5, 5, 5, 5));
-					externalPluginButton.setLayout(new BorderLayout(0, PluginPanel.BORDER_OFFSET));
-					externalPluginButton.addActionListener(l->getMuxer().pushState(pluginHubPanelProvider.get()));
-					southPanel.add(externalPluginButton, "South");
-					pluginListPanel.add(southPanel, "South");
-					rebuildPluginList();
-				});
-			}catch(Exception ex){
-				log.error("Failed to initialize RuneLiteHijack Plugin Hub", ex);
-			}
-		});
-	}
-	
-	public MultiplexingPluginPanel getMuxer(){
-		if(muxer == null){
-			try{
-				Field field = objPluginListPanel.getClass().getDeclaredField("muxer");
-				field.setAccessible(true);
-				muxer = (MultiplexingPluginPanel) field.get(objPluginListPanel);
-			}catch(Exception ex){
-				ex.printStackTrace();
-				return null;
-			}
-		}
-		return muxer;
-	}
-	
-	void rebuildPluginList(){
-		try{
-			Method method = objPluginListPanel.getClass().getDeclaredMethod("rebuildPluginList");
-			method.setAccessible(true);
-			method.invoke(objPluginListPanel);
-		}catch(Exception ex){
-			ex.printStackTrace();
-		}
-		refresh();
-	}
-	
-	public void addFakePlugin(String name, String description, String[] tags, Config config, ConfigDescriptor configDescriptor){
-		try{
-			var method = objPluginListPanel.getClass().getDeclaredField("fakePlugins");
-			method.setAccessible(true);
-			List<Object> fakePlugins = (List<Object>) method.get(objPluginListPanel);
-			
-			var clazz = Class.forName("net.runelite.client.plugins.config.PluginConfigurationDescriptor")
-				.getDeclaredConstructor(String.class, String.class, String[].class, Config.class, ConfigDescriptor.class);
-			clazz.setAccessible(true);
-			Object descriptor = clazz.newInstance(name, description, tags, config, configDescriptor);
-			fakePlugins.add(descriptor);
-		}catch(Exception ex){
-			ex.printStackTrace();
-		}
-	}
-	
-	void refresh(){
-		// update enabled / disabled status of all items
+public class ArnahPluginListPanel {
+
+    @Getter
+    private static Object objPluginListPanel;
+    private static MultiplexingPluginPanel muxer;
+    private final ConfigManager configManager;
+    private final PluginManager pluginManager;
+    private final Provider<ArnahPluginHubPanel> pluginHubPanelProvider;
+    @Getter
+    private final ArnahPluginManager externalPluginManager;
+    @Getter
+    private PluginPanel pluginListPanel;// PluginListPanel
+
+    @Inject
+    public ArnahPluginListPanel(ConfigManager configManager, PluginManager pluginManager, Provider<ArnahPluginHubPanel> pluginHubPanelProvider, ArnahPluginManager externalPluginManager, EventBus eventBus) {
+        this.configManager = configManager;
+        this.pluginManager = pluginManager;
+        this.pluginHubPanelProvider = pluginHubPanelProvider;
+        this.externalPluginManager = externalPluginManager;
+        eventBus.register(this);
+    }
+
+    public void init() {
+        pluginManager.getPlugins().stream().filter(ConfigPlugin.class::isInstance).findAny().ifPresent(plugin -> {
+            try {
+                Field field = ConfigPlugin.class.getDeclaredField("pluginListPanelProvider");
+                field.setAccessible(true);
+                Provider<PluginPanel> pluginPanelProvider = (Provider<PluginPanel>) field.get(plugin);
+                pluginListPanel = (PluginPanel) (objPluginListPanel = pluginPanelProvider.get());
+                SwingUtilities.invokeLater(() -> {
+                    JPanel southPanel = new FixedWidthPanel();
+                    southPanel.setLayout(new BorderLayout());
+                    for (Component maybeAButton : pluginListPanel.getComponents()) {
+                        if (maybeAButton instanceof JButton) {
+                            JButton button = (JButton) maybeAButton;
+                            if (button.getText() == null) continue;
+                            if (!button.getText().equals("Plugin Hub")) continue;
+                            pluginListPanel.remove(button);
+                            southPanel.add(button, "North");
+                        }
+                    }
+                    JButton externalPluginButton = new JButton("RuneLiteHijack Plugin Hub");
+                    externalPluginButton.setBorder(new EmptyBorder(5, 5, 5, 5));
+                    externalPluginButton.setLayout(new BorderLayout(0, PluginPanel.BORDER_OFFSET));
+                    externalPluginButton.addActionListener(l -> getMuxer().pushState(pluginHubPanelProvider.get()));
+                    southPanel.add(externalPluginButton, "South");
+                    pluginListPanel.add(southPanel, "South");
+                    rebuildPluginList();
+                });
+            } catch (Exception ex) {
+                log.error("Failed to initialize RuneLiteHijack Plugin Hub", ex);
+            }
+        });
+    }
+
+    public MultiplexingPluginPanel getMuxer() {
+        if (muxer == null) {
+            try {
+                Field field = objPluginListPanel.getClass().getDeclaredField("muxer");
+                field.setAccessible(true);
+                muxer = (MultiplexingPluginPanel) field.get(objPluginListPanel);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return null;
+            }
+        }
+        return muxer;
+    }
+
+    void rebuildPluginList() {
+        try {
+            Method method = objPluginListPanel.getClass().getDeclaredMethod("rebuildPluginList");
+            method.setAccessible(true);
+            method.invoke(objPluginListPanel);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        refresh();
+    }
+
+    public void addFakePlugin(String name, String description, String[] tags, Config config, ConfigDescriptor configDescriptor) {
+        try {
+            var method = objPluginListPanel.getClass().getDeclaredField("fakePlugins");
+            method.setAccessible(true);
+            List<Object> fakePlugins = (List<Object>) method.get(objPluginListPanel);
+
+            var clazz = Class.forName("net.runelite.client.plugins.config.PluginConfigurationDescriptor")
+                    .getDeclaredConstructor(String.class, String.class, String[].class, Config.class, ConfigDescriptor.class);
+            clazz.setAccessible(true);
+            Object descriptor = clazz.newInstance(name, description, tags, config, configDescriptor);
+            fakePlugins.add(descriptor);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    void refresh() {
+        // update enabled / disabled status of all items
 		/*pluginList.forEach(listItem ->
 		{
 			final Plugin plugin = listItem.getPluginConfig().getPlugin();
@@ -169,61 +164,61 @@ public class ArnahPluginListPanel{
 		validate();
 
 		scrollPane.getVerticalScrollBar().setValue(scrollBarPosition);*/
-	}
-	
-	void openWithFilter(String filter){
-		// searchBar.setText(filter);
-		// onSearchBarChanged();
-		// muxer.pushState(this);
-	}
-	
-	private void openConfigurationPanel(String configGroup){
-		try{
-			Method method = objPluginListPanel.getClass().getDeclaredMethod("openConfigurationPanel", String.class);
-			method.setAccessible(true);
-			method.invoke(objPluginListPanel, configGroup);
-		}catch(Exception ex){
-			ex.printStackTrace();
-		}
-	}
-	
-	void openConfigurationPanel(Plugin plugin){
-		try{
-			Method method = objPluginListPanel.getClass().getDeclaredMethod("openConfigurationPanel", Plugin.class);
-			method.setAccessible(true);
-			method.invoke(objPluginListPanel, plugin);
-		}catch(Exception ex){
-			ex.printStackTrace();
-		}
-	}
-	
-	void openConfigurationPanel(ArnahPluginConfigurationDescriptor plugin){
-		// ConfigPanel panel = configPanelProvider.get();
-		// panel.init(plugin);
-		// muxer.pushState(panel);
-	}
-	
-	void startPlugin(Plugin plugin){
-		pluginManager.setPluginEnabled(plugin, true);
-		
-		try{
-			pluginManager.startPlugin(plugin);
-		}catch(PluginInstantiationException ex){
-			log.warn("Error when starting plugin {}", plugin.getClass().getSimpleName(), ex);
-		}
-	}
-	
-	void stopPlugin(Plugin plugin){
-		pluginManager.setPluginEnabled(plugin, false);
-		
-		try{
-			pluginManager.stopPlugin(plugin);
-		}catch(PluginInstantiationException ex){
-			log.warn("Error when stopping plugin {}", plugin.getClass().getSimpleName(), ex);
-		}
-	}
-	
-	private List<String> getPinnedPluginNames(){
+    }
+
+    void openWithFilter(String filter) {
+        // searchBar.setText(filter);
+        // onSearchBarChanged();
+        // muxer.pushState(this);
+    }
+
+    private void openConfigurationPanel(String configGroup) {
+        try {
+            Method method = objPluginListPanel.getClass().getDeclaredMethod("openConfigurationPanel", String.class);
+            method.setAccessible(true);
+            method.invoke(objPluginListPanel, configGroup);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    void openConfigurationPanel(Plugin plugin) {
+        try {
+            Method method = objPluginListPanel.getClass().getDeclaredMethod("openConfigurationPanel", Plugin.class);
+            method.setAccessible(true);
+            method.invoke(objPluginListPanel, plugin);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    void openConfigurationPanel(ArnahPluginConfigurationDescriptor plugin) {
+        // ConfigPanel panel = configPanelProvider.get();
+        // panel.init(plugin);
+        // muxer.pushState(panel);
+    }
+
+    void startPlugin(Plugin plugin) {
+        pluginManager.setPluginEnabled(plugin, true);
+
+        try {
+            pluginManager.startPlugin(plugin);
+        } catch (PluginInstantiationException ex) {
+            log.warn("Error when starting plugin {}", plugin.getClass().getSimpleName(), ex);
+        }
+    }
+
+    void stopPlugin(Plugin plugin) {
+        pluginManager.setPluginEnabled(plugin, false);
+
+        try {
+            pluginManager.stopPlugin(plugin);
+        } catch (PluginInstantiationException ex) {
+            log.warn("Error when stopping plugin {}", plugin.getClass().getSimpleName(), ex);
+        }
+    }
+
+    private List<String> getPinnedPluginNames() {
 		/*final String config = configManager.getConfiguration(RUNELITE_GROUP_NAME, PINNED_PLUGINS_CONFIG_KEY);
 
 		if (config == null)
@@ -232,20 +227,20 @@ public class ArnahPluginListPanel{
 		}
 
 		return Text.fromCSV(config);*/
-		return List.of();
-	}
-	
-	void savePinnedPlugins(){
+        return List.of();
+    }
+
+    void savePinnedPlugins() {
 /*		final String value = pluginList.stream()
 			.filter(ArnahPluginListItem::isPinned)
 			.map(p -> p.getPluginConfig().getName())
 			.collect(Collectors.joining(","));
 */
-		// configManager.setConfiguration(RUNELITE_GROUP_NAME, PINNED_PLUGINS_CONFIG_KEY, value);
-	}
-	
-	@Subscribe
-	private void onArnahPluginsChanged(ArnahPluginsChanged event){
-		SwingUtilities.invokeLater(this::rebuildPluginList);
-	}
+        // configManager.setConfiguration(RUNELITE_GROUP_NAME, PINNED_PLUGINS_CONFIG_KEY, value);
+    }
+
+    @Subscribe
+    private void onArnahPluginsChanged(ArnahPluginsChanged event) {
+        SwingUtilities.invokeLater(this::rebuildPluginList);
+    }
 }

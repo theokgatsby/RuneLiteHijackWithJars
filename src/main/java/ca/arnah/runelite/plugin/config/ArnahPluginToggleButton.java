@@ -24,35 +24,35 @@
  */
 package ca.arnah.runelite.plugin.config;
 
-import java.awt.Dimension;
-import java.awt.image.BufferedImage;
-import javax.swing.ImageIcon;
-import javax.swing.JToggleButton;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.SwingUtil;
 
-class ArnahPluginToggleButton extends JToggleButton{
-	
-	private static final ImageIcon ON_SWITCHER;
-	private static final ImageIcon OFF_SWITCHER;
-	
-	static{
-		Class<?> memes = null;
-		try{
-			memes = Class.forName("net.runelite.client.plugins.config.ConfigPanel");
-		}catch(ClassNotFoundException ex){
-			ex.printStackTrace();
-		}
-		BufferedImage onSwitcher = ImageUtil.loadImageResource(memes, "switcher_on.png");
-		ON_SWITCHER = new ImageIcon(onSwitcher);
-		OFF_SWITCHER = new ImageIcon(ImageUtil.flipImage(ImageUtil.luminanceScale(ImageUtil.grayscaleImage(onSwitcher), 0.61f), true, false));
-	}
-	
-	public ArnahPluginToggleButton(){
-		super(OFF_SWITCHER);
-		setSelectedIcon(ON_SWITCHER);
-		SwingUtil.removeButtonDecorations(this);
-		setPreferredSize(new Dimension(25, 0));
-		SwingUtil.addModalTooltip(this, "Disable plugin", "Enable plugin");
-	}
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+
+class ArnahPluginToggleButton extends JToggleButton {
+
+    private static final ImageIcon ON_SWITCHER;
+    private static final ImageIcon OFF_SWITCHER;
+
+    static {
+        Class<?> memes = null;
+        try {
+            memes = Class.forName("net.runelite.client.plugins.config.ConfigPanel");
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        }
+        BufferedImage onSwitcher = ImageUtil.loadImageResource(memes, "switcher_on.png");
+        ON_SWITCHER = new ImageIcon(onSwitcher);
+        OFF_SWITCHER = new ImageIcon(ImageUtil.flipImage(ImageUtil.luminanceScale(ImageUtil.grayscaleImage(onSwitcher), 0.61f), true, false));
+    }
+
+    public ArnahPluginToggleButton() {
+        super(OFF_SWITCHER);
+        setSelectedIcon(ON_SWITCHER);
+        SwingUtil.removeButtonDecorations(this);
+        setPreferredSize(new Dimension(25, 0));
+        SwingUtil.addModalTooltip(this, "Disable plugin", "Enable plugin");
+    }
 }

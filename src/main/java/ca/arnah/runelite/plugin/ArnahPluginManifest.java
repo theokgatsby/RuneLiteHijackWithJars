@@ -24,10 +24,6 @@
  */
 package ca.arnah.runelite.plugin;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.function.Supplier;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -36,55 +32,60 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.runelite.client.RuneLite;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.function.Supplier;
+
 /**
  * @author Arnah
  * @since Nov 08, 2020
  */
 @Data
-public class ArnahPluginManifest{
-	
-	public static File PLUGINS_DIR;
-	
-	static{
-		PLUGINS_DIR = new File(RuneLite.PLUGINS_DIR.getParentFile(), "hijack-plugins");
-	}
-	
-	@SerializedName(value = "internalName", alternate = {"id"})
-	private String internalName;
-	private String hash;
-	private int size;
-	private String[] plugins;
-	//
-	@SerializedName(value = "displayName", alternate = "name")
-	private String displayName;
-	private String description;
-	private String provider;
-	
-	@EqualsAndHashCode.Exclude
-	private URL support;
-	
-	@EqualsAndHashCode.Exclude
-	private String url;
-	
-	@EqualsAndHashCode.Exclude
-	private transient Supplier<HashFunction> hashType = Hashing::sha256;
-	
-	File getJarFile(){
-		return new File(PLUGINS_DIR, getInternalName() + ".jar");
-	}
-	
-	boolean isValid(){
-		File file = getJarFile();
-		
-		try{
-			if(file.exists()){
-				String hash = Files.asByteSource(file).hash(hashType.get()).toString();
-				if(getHash().equals(hash)){
-					return true;
-				}
-			}
-		}catch(IOException ignored){
-		}
-		return false;
-	}
+public class ArnahPluginManifest {
+
+    public static File PLUGINS_DIR;
+
+    static {
+        PLUGINS_DIR = new File(RuneLite.PLUGINS_DIR.getParentFile(), "hijack-plugins");
+    }
+
+    @SerializedName(value = "internalName", alternate = {"id"})
+    private String internalName;
+    private String hash;
+    private int size;
+    private String[] plugins;
+    //
+    @SerializedName(value = "displayName", alternate = "name")
+    private String displayName;
+    private String description;
+    private String provider;
+
+    @EqualsAndHashCode.Exclude
+    private URL support;
+
+    @EqualsAndHashCode.Exclude
+    private String url;
+
+    @EqualsAndHashCode.Exclude
+    private transient Supplier<HashFunction> hashType = Hashing::sha256;
+
+    File getJarFile() {
+        return new File(PLUGINS_DIR, getInternalName() + ".jar");
+    }
+
+    boolean isValid() {
+        File file = getJarFile();
+
+        try {
+            if (file.exists()) {
+                String hash = Files.asByteSource(file).hash(hashType.get()).toString();
+                if (getHash().equals(hash)) {
+                    return true;
+                }
+            }
+        } catch (IOException ignored) {
+        }
+        return false;
+    }
 }

@@ -24,8 +24,6 @@
  */
 package ca.arnah.runelite.plugin.config;
 
-import javax.annotation.Nullable;
-import javax.swing.JMenuItem;
 import ca.arnah.runelite.plugin.ArnahPluginManager;
 import ca.arnah.runelite.plugin.ArnahPluginManifest;
 import lombok.Value;
@@ -34,57 +32,60 @@ import net.runelite.client.config.ConfigDescriptor;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.util.LinkBrowser;
 
+import javax.annotation.Nullable;
+import javax.swing.*;
+
 @Value
-class ArnahPluginConfigurationDescriptor{
-	
-	private final String name;
-	private final String description;
-	private final String[] tags;
-	
-	// Can be null if its not an actual plugin (RuneLite / ChatColors)
-	@Nullable
-	private final Plugin plugin;
-	
-	// Can be null if it has no more configuration than the on/off toggle
-	@Nullable
-	private final Config config;
-	
-	@Nullable
-	private final ConfigDescriptor configDescriptor;
-	
-	boolean hasConfigurables(){
-		return configDescriptor != null && !configDescriptor.getItems().stream().allMatch(item->item.getItem().hidden());
-	}
-	
-	/**
-	 * Creates a menu item for linking to a support page for the plugin
-	 *
-	 * @return A {@link JMenuItem} which opens the plugin's wiki page URL in the browser when clicked
-	 */
-	@Nullable
-	JMenuItem createSupportMenuItem(){
-		ArnahPluginManifest mf = getExternalPluginManifest();
-		if(mf != null){
-			if(mf.getSupport() == null){
-				return null;
-			}
-			
-			JMenuItem menuItem = new JMenuItem("Support");
-			menuItem.addActionListener(e->LinkBrowser.browse(mf.getSupport().toString()));
-			return menuItem;
-		}
-		
-		JMenuItem menuItem = new JMenuItem("Wiki");
-		menuItem.addActionListener(e->LinkBrowser.browse("https://github.com/runelite/runelite/wiki/" + name.replace(' ', '-')));
-		return menuItem;
-	}
-	
-	@Nullable
-	ArnahPluginManifest getExternalPluginManifest(){
-		if(plugin == null){
-			return null;
-		}
-		
-		return ArnahPluginManager.getExternalPluginManifest(plugin.getClass());
-	}
+class ArnahPluginConfigurationDescriptor {
+
+    private final String name;
+    private final String description;
+    private final String[] tags;
+
+    // Can be null if its not an actual plugin (RuneLite / ChatColors)
+    @Nullable
+    private final Plugin plugin;
+
+    // Can be null if it has no more configuration than the on/off toggle
+    @Nullable
+    private final Config config;
+
+    @Nullable
+    private final ConfigDescriptor configDescriptor;
+
+    boolean hasConfigurables() {
+        return configDescriptor != null && !configDescriptor.getItems().stream().allMatch(item -> item.getItem().hidden());
+    }
+
+    /**
+     * Creates a menu item for linking to a support page for the plugin
+     *
+     * @return A {@link JMenuItem} which opens the plugin's wiki page URL in the browser when clicked
+     */
+    @Nullable
+    JMenuItem createSupportMenuItem() {
+        ArnahPluginManifest mf = getExternalPluginManifest();
+        if (mf != null) {
+            if (mf.getSupport() == null) {
+                return null;
+            }
+
+            JMenuItem menuItem = new JMenuItem("Support");
+            menuItem.addActionListener(e -> LinkBrowser.browse(mf.getSupport().toString()));
+            return menuItem;
+        }
+
+        JMenuItem menuItem = new JMenuItem("Wiki");
+        menuItem.addActionListener(e -> LinkBrowser.browse("https://github.com/runelite/runelite/wiki/" + name.replace(' ', '-')));
+        return menuItem;
+    }
+
+    @Nullable
+    ArnahPluginManifest getExternalPluginManifest() {
+        if (plugin == null) {
+            return null;
+        }
+
+        return ArnahPluginManager.getExternalPluginManifest(plugin.getClass());
+    }
 }
